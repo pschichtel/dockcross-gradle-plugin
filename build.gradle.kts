@@ -16,6 +16,8 @@ dependencies {
 }
 
 gradlePlugin {
+    website = "https://github.com/pschichtel/dockcross-gradle-plugin"
+    vcsUrl = "https://github.com/pschichtel/dockcross-gradle-plugin"
     plugins {
         create("dockcrossPlugin") {
             id = "tel.schich.dockcross"
