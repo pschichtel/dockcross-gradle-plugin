@@ -12,10 +12,10 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.property
 import org.gradle.process.ExecOperations
+import tel.schich.dockcross.execute.AutoDetectDockerLikeRunner
 import tel.schich.dockcross.execute.ContainerRunner
 import tel.schich.dockcross.execute.DefaultCliDispatcher
 import tel.schich.dockcross.execute.ExecutionRequest
-import tel.schich.dockcross.execute.PodmanRunner
 import java.io.File
 import java.nio.file.Paths
 import javax.inject.Inject
@@ -47,7 +47,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     @get:OutputDirectory
     val output: DirectoryProperty = project.objects.directoryProperty()
 
-    private var runner: ContainerRunner = PodmanRunner()
+    private var runner: ContainerRunner = AutoDetectDockerLikeRunner
 
     init {
         mountSource.convention(project.layout.projectDirectory.asFile)
