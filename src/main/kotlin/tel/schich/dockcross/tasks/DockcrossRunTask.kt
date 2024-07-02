@@ -17,13 +17,14 @@ import tel.schich.dockcross.execute.AutoDetectDockerLikeRunner
 import tel.schich.dockcross.execute.ContainerRunner
 import tel.schich.dockcross.execute.DefaultCliDispatcher
 import tel.schich.dockcross.execute.ExecutionRequest
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 import javax.inject.Inject
 
 abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOperations) : DefaultTask() {
-    @get:InputDirectory
-    val mountSource: DirectoryProperty = project.objects.directoryProperty()
+    @get:Input
+    val mountSource: Property<File> = project.objects.property()
 
     @Optional
     @get:Input
@@ -51,7 +52,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     private var runner: ContainerRunner = AutoDetectDockerLikeRunner
 
     init {
-        mountSource.convention(project.layout.projectDirectory)
+        mountSource.convention(project.layout.projectDirectory.asFile)
         dockcrossTag.convention("latest")
         dockcrossRepository.convention("docker.io/dockcross/{image}")
         output.convention(project.layout.buildDirectory)
@@ -67,7 +68,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
 
     @TaskAction
     fun run() {
-        val mountSource = mountSource.get().asFile.toPath().toRealPath()
+        val mountSource = mountSource.get().toPath().toRealPath()
         val outputPath = output.get().asFile.toPath().toRealPath()
         if (!outputPath.startsWith(mountSource)) {
             throw GradleException("The output path $outputPath is not inside the mount source $mountSource!")
