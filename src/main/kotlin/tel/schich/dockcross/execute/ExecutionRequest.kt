@@ -7,6 +7,7 @@ data class ExecutionRequest(
     val command: List<String>,
     val runAs: Pair<Int, Int>?,
     val mountSource: Path,
+    val outputDir: Path,
     val workdir: Path,
     val toolchainHome: Path?,
     val containerName: String?,

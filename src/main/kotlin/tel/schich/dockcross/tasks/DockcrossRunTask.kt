@@ -1,6 +1,7 @@
 package tel.schich.dockcross.tasks
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -16,13 +17,13 @@ import tel.schich.dockcross.execute.AutoDetectDockerLikeRunner
 import tel.schich.dockcross.execute.ContainerRunner
 import tel.schich.dockcross.execute.DefaultCliDispatcher
 import tel.schich.dockcross.execute.ExecutionRequest
-import java.io.File
+import java.nio.file.Files
 import java.nio.file.Paths
 import javax.inject.Inject
 
 abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOperations) : DefaultTask() {
-    @get:Input
-    val mountSource: Property<File> = project.objects.property()
+    @get:InputDirectory
+    val mountSource: DirectoryProperty = project.objects.directoryProperty()
 
     @Optional
     @get:Input
@@ -50,7 +51,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     private var runner: ContainerRunner = AutoDetectDockerLikeRunner
 
     init {
-        mountSource.convention(project.layout.projectDirectory.asFile)
+        mountSource.convention(project.layout.projectDirectory)
         dockcrossTag.convention("latest")
         dockcrossRepository.convention("docker.io/dockcross/{image}")
         output.convention(project.layout.buildDirectory)
@@ -66,7 +67,12 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
 
     @TaskAction
     fun run() {
-        output.get().asFile.mkdirs()
+        val mountSource = mountSource.get().asFile.toPath().toRealPath()
+        val outputPath = output.get().asFile.toPath().toRealPath()
+        if (!outputPath.startsWith(mountSource)) {
+            throw GradleException("The output path $outputPath is not inside the mount source $mountSource!")
+        }
+        Files.createDirectories(outputPath)
         val dispatcher = DefaultCliDispatcher(execOps)
         val toolchainHome = javaHome.orNull?.asFile?.toPath()
             ?: System.getenv("JAVA_HOME")?.ifEmpty { null }?.let { Paths.get(it) }
@@ -80,8 +86,9 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
                 containerName = containerName.orNull?.ifEmpty { null },
                 command = command,
                 runAs = null,
-                mountSource = mountSource.get().toPath(),
-                workdir = output.get().asFile.toPath(),
+                mountSource = mountSource,
+                outputDir = outputPath,
+                workdir = outputPath,
                 toolchainHome = toolchainHome
             )
             runner.run(dispatcher, request)

@@ -44,9 +44,19 @@ val build_x86_64 by tasks.registering(DockcrossRunTask::class) {
 
 Each command listed in the script is executed in a dedicated container.
 This enforces that state is only retained between commands, if it is placed in the output directory.
+
 If a java home can be determined either through explicit configuration our by reading the `JAVA_HOME` env var, then
 within the container `JAVA_HOME` will point to a path (not the same path) with that JDK mounted to it as read-only.
-The env var `MOUNT_SOURCE` will always point to the path where the mountSource is mounted to.
+
+The env var `MOUNT_SOURCE` will always point to the path where the mountSource is mounted to as read-only.
+
+Finally, the env var `OUTPUT_DIR` will always point to the configured output, the only place where files can be written
+and changed without being lost afterward. `OUTPUT_DIR` is always contained within `MOUNT_SOURCE`.
+
+Environment variables used in script commands will not automatically be replaced, use something like
+`listOf("bash", "-c", """echo "$OUTPUT_DIR"""")`.
+
+The working directory will be the `OUTPUT_DIR`.
 
 When using `runner(NonContainerRunner)`, no dockcross container is used to run the command, instead it is executed as is
 on the machine gradle is executed on. Environment variables are configured in the same way so commands should run

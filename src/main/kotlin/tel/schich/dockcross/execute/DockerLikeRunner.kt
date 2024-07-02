@@ -1,14 +1,18 @@
 package tel.schich.dockcross.execute
 
 import org.gradle.api.GradleException
+import tel.schich.dockcross.execute.ContainerRunner.Companion.JAVA_HOME_ENV
+import tel.schich.dockcross.execute.ContainerRunner.Companion.MOUNT_SOURCE_ENV
+import tel.schich.dockcross.execute.ContainerRunner.Companion.OUTPUT_DIR_ENV
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
 fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequest) {
-    val mountPoint = "/work"
-    val workdir = request.mountSource.relativize(request.workdir)
+    val mountPoint = Paths.get("/work")
+    val outputDir = mountPoint.resolve(request.mountSource.relativize(request.outputDir))
+    val workdir = mountPoint.resolve(request.mountSource.relativize(request.workdir))
     fun MutableList<String>.bindMount(from: String, to: String = from, readOnly: Boolean = false) {
         val roFlag = if (readOnly) ":ro" else ""
         add("-v")
@@ -35,16 +39,18 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
             add("-u")
             add("$uid:$gid")
         }
-        bindMount(request.mountSource.toString(), mountPoint)
-        env("MOUNT_SOURCE", mountPoint)
+        bindMount(request.mountSource.toString(), mountPoint.toString(), readOnly = true)
+        env(MOUNT_SOURCE_ENV, mountPoint.toString())
+        bindMount(request.outputDir.toString(), outputDir.toString())
+        env(OUTPUT_DIR_ENV, outputDir.toString())
         tmpfs(mountPoint = "/tmp")
         request.toolchainHome?.let {
             val path = "/java-toolchain"
             bindMount(it.toString(), path, readOnly = true)
-            env("JAVA_HOME", path)
+            env(JAVA_HOME_ENV, path)
         }
         add("--workdir")
-        add("$mountPoint/$workdir")
+        add(workdir.toString())
         add(request.image)
         addAll(request.command)
     }
