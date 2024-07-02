@@ -53,10 +53,13 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         mountSource.convention(project.layout.projectDirectory.asFile)
         dockcrossTag.convention("latest")
         dockcrossRepository.convention("docker.io/dockcross/{image}")
-        image.convention("linux-x64")
         output.convention(project.layout.buildDirectory)
+        group = "build"
     }
 
+    /**
+     * Configures a different ContainerRunner for this task.
+     */
     fun runner(runner: ContainerRunner) {
         this.runner = runner
     }
@@ -67,7 +70,6 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         val dispatcher = DefaultCliDispatcher(execOps)
         val toolchainHome = javaHome.orNull?.asFile?.toPath()
             ?: System.getenv("JAVA_HOME")?.ifEmpty { null }?.let { Paths.get(it) }
-
 
         val arch = image.get()
         val repo = dockcrossRepository.get().replace("{image}", arch)

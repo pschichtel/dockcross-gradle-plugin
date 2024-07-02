@@ -14,6 +14,10 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
         add("-v")
         add("$from:$to$roFlag")
     }
+    fun MutableList<String>.tmpfs(mountPoint: String) {
+        add("--mount")
+        add("type=tmpfs,destination=$mountPoint")
+    }
     fun MutableList<String>.env(name: String, value: String) {
         add("-e")
         add("$name=$value")
@@ -32,6 +36,8 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
             add("$uid:$gid")
         }
         bindMount(request.mountSource.toString(), mountPoint)
+        env("MOUNT_SOURCE", mountPoint)
+        tmpfs(mountPoint = "/tmp")
         request.toolchainHome?.let {
             val path = "/java-toolchain"
             bindMount(it.toString(), path, readOnly = true)
