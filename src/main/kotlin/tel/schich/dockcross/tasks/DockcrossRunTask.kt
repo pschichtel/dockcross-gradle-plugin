@@ -4,6 +4,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -11,6 +12,7 @@ import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.listProperty
+import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.gradle.process.ExecOperations
 import tel.schich.dockcross.execute.AutoDetectDockerLikeRunner
@@ -42,6 +44,9 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     @get:Input
     val script: ListProperty<List<String>> = project.objects.listProperty()
 
+    @get:Input
+    val extraEnv: MapProperty<String, String> = project.objects.mapProperty()
+
     @Optional
     @get:InputDirectory
     val javaHome: DirectoryProperty = project.objects.directoryProperty()
@@ -56,6 +61,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         dockcrossTag.convention("latest")
         dockcrossRepository.convention("docker.io/dockcross/{image}")
         output.convention(project.layout.buildDirectory)
+        extraEnv.convention(emptyMap())
         group = "build"
     }
 
@@ -90,7 +96,8 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
                 mountSource = mountSource,
                 outputDir = outputPath,
                 workdir = outputPath,
-                toolchainHome = toolchainHome
+                toolchainHome = toolchainHome,
+                extraEnv = extraEnv.get(),
             )
             runner.run(dispatcher, request)
         }

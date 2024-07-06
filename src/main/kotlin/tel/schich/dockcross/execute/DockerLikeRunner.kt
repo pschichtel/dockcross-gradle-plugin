@@ -39,6 +39,9 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
             add("-u")
             add("$uid:$gid")
         }
+        for ((name, value) in request.extraEnv) {
+            env(name, value)
+        }
         bindMount(request.mountSource.toString(), mountPoint.toString(), readOnly = true)
         env(MOUNT_SOURCE_ENV, mountPoint.toString())
         bindMount(request.outputDir.toString(), outputDir.toString())

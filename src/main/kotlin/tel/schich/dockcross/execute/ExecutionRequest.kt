@@ -11,4 +11,5 @@ data class ExecutionRequest(
     val workdir: Path,
     val toolchainHome: Path?,
     val containerName: String?,
+    val extraEnv: Map<String, String> = emptyMap(),
 )
