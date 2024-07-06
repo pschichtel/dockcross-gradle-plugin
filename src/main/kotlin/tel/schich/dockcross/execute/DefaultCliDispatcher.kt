@@ -1,5 +1,6 @@
 package tel.schich.dockcross.execute
 
+import org.gradle.api.GradleException
 import org.gradle.process.ExecOperations
 import java.nio.file.Path
 
@@ -11,7 +12,7 @@ class DefaultCliDispatcher(private val execOps: ExecOperations) : CliDispatcher 
             environment(extraEnv)
         }
         if (result.exitValue != 0) {
-            error("Command failed: $result")
+            throw GradleException("Command failed: $result")
         }
     }
 }
