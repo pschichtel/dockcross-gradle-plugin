@@ -47,6 +47,9 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     @get:Input
     val extraEnv: MapProperty<String, String> = project.objects.mapProperty()
 
+    @get:Input
+    val unsafeWritableMountSource: Property<Boolean> = project.objects.property()
+
     @Optional
     @get:InputDirectory
     val javaHome: DirectoryProperty = project.objects.directoryProperty()
@@ -62,6 +65,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         dockcrossRepository.convention("docker.io/dockcross/{image}")
         output.convention(project.layout.buildDirectory)
         extraEnv.convention(emptyMap())
+        unsafeWritableMountSource.convention(false)
         group = "build"
     }
 
@@ -98,6 +102,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
                 workdir = outputPath,
                 toolchainHome = toolchainHome,
                 extraEnv = extraEnv.get(),
+                unsafeWritableMountSource = unsafeWritableMountSource.get(),
             )
             runner.run(dispatcher, request)
         }
