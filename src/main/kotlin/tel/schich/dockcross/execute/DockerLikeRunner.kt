@@ -10,6 +10,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequest) {
+    val javaMountPoint = Paths.get("/java-toolchain")
     val mountPoint = Paths.get("/work")
     val outputDir = mountPoint.resolve(request.mountSource.relativize(request.outputDir))
     val workdir = mountPoint.resolve(request.mountSource.relativize(request.workdir))
@@ -26,6 +27,13 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
         add("-e")
         add("$name=$value")
     }
+
+    val substitutionInput = SubstitutionInput(
+        mountSource = mountPoint.toString(),
+        outputDir = outputDir.toString(),
+        javaHome = if (request.toolchainHome != null) javaMountPoint.toString() else "",
+    )
+
     val command = buildList {
         add(executable)
         add("run")
@@ -40,7 +48,7 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
             add("$uid:$gid")
         }
         for ((name, value) in request.extraEnv) {
-            env(name, value)
+            env(name, substituteString(value, substitutionInput))
         }
         bindMount(request.mountSource.toString(), mountPoint.toString(), readOnly = !request.unsafeWritableMountSource)
         env(MOUNT_SOURCE_ENV, mountPoint.toString())
@@ -48,14 +56,13 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
         env(OUTPUT_DIR_ENV, outputDir.toString())
         tmpfs(mountPoint = "/tmp")
         request.toolchainHome?.let {
-            val path = "/java-toolchain"
-            bindMount(it.toString(), path, readOnly = true)
-            env(JAVA_HOME_ENV, path)
+            bindMount(it.toString(), javaMountPoint.toString(), readOnly = true)
+            env(JAVA_HOME_ENV, javaMountPoint.toString())
         }
         add("--workdir")
         add(workdir.toString())
         add(request.image)
-        addAll(request.command)
+        addAll(request.command.map { substituteString(it, substitutionInput) })
     }
     println("Command: ${command.joinToString(" ")}")
     cli.execute(Paths.get("."), command, emptyMap())

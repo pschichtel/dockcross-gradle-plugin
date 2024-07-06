@@ -42,10 +42,10 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     val dockcrossRepository: Property<String> = project.objects.property()
 
     @get:Input
-    val script: ListProperty<List<String>> = project.objects.listProperty()
+    val script: ListProperty<List<CharSequence>> = project.objects.listProperty()
 
     @get:Input
-    val extraEnv: MapProperty<String, String> = project.objects.mapProperty()
+    val extraEnv: MapProperty<String, CharSequence> = project.objects.mapProperty()
 
     @get:Input
     val unsafeWritableMountSource: Property<Boolean> = project.objects.property()

@@ -7,6 +7,11 @@ import tel.schich.dockcross.execute.ContainerRunner.Companion.OUTPUT_DIR_ENV
 
 object NonContainerRunner : ContainerRunner {
     override fun run(cli: CliDispatcher, request: ExecutionRequest) {
+        val substitutionInput = SubstitutionInput(
+            mountSource = request.mountSource.toString(),
+            outputDir = request.outputDir.toString(),
+            javaHome = request.toolchainHome?.toString()
+        )
         if (!request.unsafeWritableMountSource) {
             throw GradleException("The ${NonContainerRunner::class.simpleName} is always unsafe!")
         }
@@ -17,7 +22,9 @@ object NonContainerRunner : ContainerRunner {
             request.toolchainHome?.let {
                 put(JAVA_HOME_ENV, it.toString())
             }
-        }
-        cli.execute(request.workdir, request.command, env)
+        }.mapValues { (_, value) -> substituteString(value, substitutionInput) }
+        val command = request.command.map { substituteString(it, substitutionInput) }
+
+        cli.execute(request.workdir, command, env)
     }
 }
