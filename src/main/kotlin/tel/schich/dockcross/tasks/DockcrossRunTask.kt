@@ -1,5 +1,6 @@
 package tel.schich.dockcross.tasks
 
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
@@ -19,6 +20,7 @@ import tel.schich.dockcross.execute.AutoDetectDockerLikeRunner
 import tel.schich.dockcross.execute.ContainerRunner
 import tel.schich.dockcross.execute.DefaultCliDispatcher
 import tel.schich.dockcross.execute.ExecutionRequest
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -76,6 +78,34 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         this.runner = runner
     }
 
+    private fun run(cmd: List<String>): String? {
+        val stdout = ByteArrayOutputStream()
+        val result = execOps.exec {
+            commandLine(cmd)
+            standardOutput = stdout
+        }
+
+        if (result.exitValue != 0) {
+            return null
+        }
+
+        return try {
+            String(stdout.toByteArray(), Charsets.UTF_8)
+        } catch (_: RuntimeException) {
+            null
+        }
+    }
+
+    private fun detectUser(): Pair<Int, Int>? {
+        if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            return null
+        }
+        val uid = run(listOf("id", "-u"))?.trim()?.toIntOrNull() ?: return null
+        val gid = run(listOf("id", "-g"))?.trim()?.toIntOrNull() ?: return null
+
+        return uid to gid
+    }
+
     @TaskAction
     fun run() {
         val mountSource = mountSource.get().toPath().toRealPath()
@@ -96,7 +126,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
                 image = image,
                 containerName = containerName.orNull?.ifEmpty { null },
                 command = command,
-                runAs = null,
+                runAs = detectUser(),
                 mountSource = mountSource,
                 outputDir = outputPath,
                 workdir = outputPath,

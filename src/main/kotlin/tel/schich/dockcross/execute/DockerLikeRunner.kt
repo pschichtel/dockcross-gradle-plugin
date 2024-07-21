@@ -9,7 +9,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequest) {
+enum class DockerMode {
+    DOCKER,
+    PODMAN,
+}
+
+fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, request: ExecutionRequest) {
     val javaMountPoint = Paths.get("/java-toolchain")
     val mountPoint = Paths.get("/work")
     val outputDir = mountPoint.resolve(request.mountSource.relativize(request.outputDir))
@@ -43,9 +48,12 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
             add("--name")
             add(it)
         }
-        request.runAs?.let { (uid, gid) ->
+        if (mode == DockerMode.PODMAN) {
+            add("--userns=keep-id")
+        }
+        if (request.runAs != null) {
             add("-u")
-            add("$uid:$gid")
+            add("${request.runAs.first}:${request.runAs.second}")
         }
         for ((name, value) in request.extraEnv) {
             env(name, substituteString(value, substitutionInput))
@@ -70,25 +78,25 @@ fun runLikeDocker(executable: String, cli: CliDispatcher, request: ExecutionRequ
 
 class DockerRunner(private val binary: String = "docker") : ContainerRunner {
     override fun run(cli: CliDispatcher, request: ExecutionRequest) {
-        runLikeDocker(binary, cli, request)
+        runLikeDocker(binary, DockerMode.DOCKER, cli, request)
     }
 }
 class PodmanRunner(private val binary: String = "docker") : ContainerRunner {
     override fun run(cli: CliDispatcher, request: ExecutionRequest) {
-        runLikeDocker(binary, cli, request)
+        runLikeDocker(binary, DockerMode.PODMAN, cli, request)
     }
 }
 
 object AutoDetectDockerLikeRunner : ContainerRunner {
-    private val executable: Path by lazy {
+    private val executable: Pair<Path, DockerMode> by lazy {
         val path = System.getenv("PATH")?.ifEmpty { null }
         if (path == null) {
             throw GradleException("No \$PATH defined, unable to auto-detect podman or docker!")
         }
         val pathElements = path.split(File.pathSeparator).filter { it.isNotBlank() }.map { Paths.get(it) }
 
-        findExecutableInPath(pathElements, name = "podman")
-            ?: findExecutableInPath(pathElements, name = "docker")
+        findExecutableInPath(pathElements, name = "podman")?.let { it to DockerMode.PODMAN }
+            ?: findExecutableInPath(pathElements, name = "docker")?.let { it to DockerMode.DOCKER }
             ?: throw GradleException("Found neither podman nor docker on the path!")
     }
 
@@ -100,6 +108,6 @@ object AutoDetectDockerLikeRunner : ContainerRunner {
     }
 
     override fun run(cli: CliDispatcher, request: ExecutionRequest) {
-        runLikeDocker(executable.toString(), cli, request)
+        runLikeDocker(executable.first.toString(), executable.second, cli, request)
     }
 }
