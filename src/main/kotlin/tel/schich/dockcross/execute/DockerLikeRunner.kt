@@ -15,11 +15,11 @@ enum class DockerMode {
 }
 
 fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, request: ExecutionRequest) {
-    val javaMountPoint = Paths.get("/java-toolchain")
-    val mountPoint = Paths.get("/work")
-    val outputDir = mountPoint.resolve(request.mountSource.relativize(request.outputDir))
-    val workdir = mountPoint.resolve(request.mountSource.relativize(request.workdir))
-    fun MutableList<String>.bindMount(from: String, to: String = from, readOnly: Boolean = false) {
+    val javaMountPoint = "/java-toolchain"
+    val mountPoint = "/work"
+    val outputDir = request.mountSource.relativize(request.outputDir).joinToString(separator = "/", prefix = "$mountPoint/")
+    val workdir = request.mountSource.relativize(request.workdir).joinToString(separator = "/", prefix = "$mountPoint/")
+    fun MutableList<String>.bindMount(from: Path, to: String, readOnly: Boolean = false) {
         val roFlag = if (readOnly) ":ro" else ""
         add("-v")
         add("$from:$to$roFlag")
@@ -34,9 +34,9 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
     }
 
     val substitutionInput = SubstitutionInput(
-        mountSource = mountPoint.toString(),
-        outputDir = outputDir.toString(),
-        javaHome = if (request.toolchainHome != null) javaMountPoint.toString() else "",
+        mountSource = mountPoint,
+        outputDir = outputDir,
+        javaHome = if (request.toolchainHome != null) javaMountPoint else "",
     )
 
     val command = buildList {
@@ -58,17 +58,17 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
         for ((name, value) in request.extraEnv) {
             env(name, substituteString(value, substitutionInput))
         }
-        bindMount(request.mountSource.toString(), mountPoint.toString(), readOnly = !request.unsafeWritableMountSource)
-        env(MOUNT_SOURCE_ENV, mountPoint.toString())
-        bindMount(request.outputDir.toString(), outputDir.toString())
-        env(OUTPUT_DIR_ENV, outputDir.toString())
+        bindMount(request.mountSource, mountPoint, readOnly = !request.unsafeWritableMountSource)
+        env(MOUNT_SOURCE_ENV, mountPoint)
+        bindMount(request.outputDir, outputDir)
+        env(OUTPUT_DIR_ENV, outputDir)
         tmpfs(mountPoint = "/tmp")
         request.toolchainHome?.let {
-            bindMount(it.toString(), javaMountPoint.toString(), readOnly = true)
-            env(JAVA_HOME_ENV, javaMountPoint.toString())
+            bindMount(it, javaMountPoint, readOnly = true)
+            env(JAVA_HOME_ENV, javaMountPoint)
         }
         add("--workdir")
-        add(workdir.toString())
+        add(workdir)
         add(request.image)
         addAll(request.command.map { substituteString(it, substitutionInput) })
     }
