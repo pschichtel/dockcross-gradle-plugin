@@ -1,5 +1,6 @@
 package tel.schich.dockcross.execute
 
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.GradleException
 import tel.schich.dockcross.execute.ContainerRunner.Companion.JAVA_HOME_ENV
 import tel.schich.dockcross.execute.ContainerRunner.Companion.MOUNT_SOURCE_ENV
@@ -101,8 +102,14 @@ object AutoDetectDockerLikeRunner : ContainerRunner {
     }
 
     private fun findExecutableInPath(path: List<Path>, name: String): Path? {
+        val executables = if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+            (System.getenv("PATHEXT")?.ifEmpty { null }?.split(';') ?: listOf(".exe", ".cmd", ".bat"))
+                .map { "$name$it" }
+        } else {
+            listOf(name)
+        }
         return path.asSequence()
-            .map { it.resolve(name) }
+            .flatMap { exePath -> executables.map(exePath::resolve) }
             .filter { Files.exists(it) && Files.isExecutable(it) }
             .firstOrNull()
     }
