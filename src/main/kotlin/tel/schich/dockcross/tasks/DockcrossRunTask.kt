@@ -116,7 +116,6 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         Files.createDirectories(outputPath)
         val dispatcher = DefaultCliDispatcher(execOps)
         val toolchainHome = javaHome.orNull?.asFile?.toPath()
-            ?: System.getenv("JAVA_HOME")?.ifEmpty { null }?.let { Paths.get(it) }
 
         val arch = image.get()
         val repo = dockcrossRepository.get().replace("{image}", arch)

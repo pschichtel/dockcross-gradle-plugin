@@ -45,7 +45,7 @@ val build_x86_64 by tasks.registering(DockcrossRunTask::class) {
 Each command listed in the script is executed in a dedicated container.
 This enforces that state is only retained between commands, if it is placed in the output directory.
 
-If a java home can be determined either through explicit configuration our by reading the `JAVA_HOME` env var, then
+If a java home has been configured through the `javaHome` property, then
 within the container `JAVA_HOME` will point to a path (not the same path) with that JDK mounted to it as read-only.
 
 The env var `MOUNT_SOURCE` will always point to the path where the mountSource is mounted to as read-only.
