@@ -8,7 +8,7 @@ data class ExecutionRequest(
     val runAs: Pair<Int, Int>?,
     val mountSource: Path,
     val outputDir: Path,
-    val workdir: Path,
+    val workDir: Path,
     val toolchainHome: Path?,
     val containerName: String?,
     val extraEnv: Map<String, CharSequence> = emptyMap(),

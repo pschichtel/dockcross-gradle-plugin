@@ -25,6 +25,6 @@ object NonContainerRunner : ContainerRunner {
         }.mapValues { (_, value) -> substituteVariables(value, substitutionInput) }
         val command = request.command.map { substituteVariables(it, substitutionInput) }
 
-        cli.execute(request.workdir, command, env)
+        cli.execute(request.workDir, command, env)
     }
 }

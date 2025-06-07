@@ -19,7 +19,7 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
     val javaMountPoint = "/java-toolchain"
     val mountPoint = "/work"
     val outputDir = request.mountSource.relativize(request.outputDir).joinToString(separator = "/", prefix = "$mountPoint/")
-    val workdir = request.mountSource.relativize(request.workdir).joinToString(separator = "/", prefix = "$mountPoint/")
+    val workdir = request.mountSource.relativize(request.workDir).joinToString(separator = "/", prefix = "$mountPoint/")
     fun MutableList<String>.bindMount(from: Path, to: String, readOnly: Boolean = false) {
         val roFlag = if (readOnly) ":ro" else ""
         add("-v")

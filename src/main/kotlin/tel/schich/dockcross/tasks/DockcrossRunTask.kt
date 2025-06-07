@@ -23,7 +23,6 @@ import tel.schich.dockcross.execute.ExecutionRequest
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
 import javax.inject.Inject
 
 abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOperations) : DefaultTask() {
@@ -128,7 +127,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
                 runAs = detectUser(),
                 mountSource = mountSource,
                 outputDir = outputPath,
-                workdir = outputPath,
+                workDir = outputPath,
                 toolchainHome = toolchainHome,
                 extraEnv = extraEnv.get(),
                 unsafeWritableMountSource = unsafeWritableMountSource.get(),
