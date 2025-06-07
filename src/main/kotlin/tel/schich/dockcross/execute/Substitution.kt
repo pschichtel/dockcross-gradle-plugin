@@ -15,7 +15,7 @@ abstract class Substituting : CharSequence, Serializable {
     }
 }
 
-internal data class SubstitutionInput(val mountSource: String, val outputDir: String, val javaHome: String?)
+data class SubstitutionInput(val mountSource: String, val outputDir: String, val javaHome: String?)
 
 /**
  * This class is a bit of a trick: It implements CharSequence, so it can be used together with normal Strings
@@ -39,7 +39,7 @@ class VariableReference(
     val variable: Variable,
 ) : Substituting()
 
-internal fun substituteString(s: CharSequence, input: SubstitutionInput): String {
+fun substituteVariables(s: CharSequence, input: SubstitutionInput): String {
     fun value(ref: Variable) = when (ref) {
         Variable.MOUNT_SOURCE -> input.mountSource
         Variable.OUTPUT_DIR -> input.outputDir

@@ -22,8 +22,8 @@ object NonContainerRunner : ContainerRunner {
             request.toolchainHome?.let {
                 put(JAVA_HOME_ENV, it.toString())
             }
-        }.mapValues { (_, value) -> substituteString(value, substitutionInput) }
-        val command = request.command.map { substituteString(it, substitutionInput) }
+        }.mapValues { (_, value) -> substituteVariables(value, substitutionInput) }
+        val command = request.command.map { substituteVariables(it, substitutionInput) }
 
         cli.execute(request.workdir, command, env)
     }

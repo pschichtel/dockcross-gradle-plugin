@@ -57,7 +57,7 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
             add("${request.runAs.first}:${request.runAs.second}")
         }
         for ((name, value) in request.extraEnv) {
-            env(name, substituteString(value, substitutionInput))
+            env(name, substituteVariables(value, substitutionInput))
         }
         bindMount(request.mountSource, mountPoint, readOnly = !request.unsafeWritableMountSource)
         env(MOUNT_SOURCE_ENV, mountPoint)
@@ -71,7 +71,7 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
         add("--workdir")
         add(workdir)
         add(request.image)
-        addAll(request.command.map { substituteString(it, substitutionInput) })
+        addAll(request.command.map { substituteVariables(it, substitutionInput) })
     }
     println("Command: ${command.joinToString(" ")}")
     cli.execute(Paths.get("."), command, emptyMap())
