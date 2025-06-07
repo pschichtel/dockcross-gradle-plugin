@@ -17,6 +17,7 @@ import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.property
 import org.gradle.process.ExecOperations
 import tel.schich.dockcross.execute.AutoDetectDockerLikeRunner
+import tel.schich.dockcross.execute.BaseScriptContext
 import tel.schich.dockcross.execute.ContainerRunner
 import tel.schich.dockcross.execute.DefaultCliDispatcher
 import tel.schich.dockcross.execute.ExecutionRequest
@@ -119,20 +120,26 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
         val arch = image.get()
         val repo = dockcrossRepository.get().replace("{image}", arch)
         val image = "$repo:${dockcrossTag.get()}"
-        for (command in script.get()) {
-            val request = ExecutionRequest(
-                image = image,
-                containerName = containerName.orNull?.ifEmpty { null },
-                command = command,
-                runAs = detectUser(),
-                mountSource = mountSource,
-                outputDir = outputPath,
-                workDir = outputPath,
-                toolchainHome = toolchainHome,
-                extraEnv = extraEnv.get(),
-                unsafeWritableMountSource = unsafeWritableMountSource.get(),
-            )
-            runner.run(dispatcher, request)
+        val scriptContext = BaseScriptContext(
+            image = image,
+            containerName = containerName.orNull?.ifEmpty { null },
+            runAs = detectUser(),
+            mountSource = mountSource,
+            outputDir = outputPath,
+            workDir = outputPath,
+            toolchainHome = toolchainHome,
+            extraEnv = extraEnv.get(),
+            unsafeWritableMountSource = unsafeWritableMountSource.get(),
+            logger = logger,
+        )
+        runner.preScript(dispatcher, scriptContext, execOps)
+        try {
+            for (command in script.get()) {
+                val request = ExecutionRequest(command, scriptContext)
+                runner.run(dispatcher, request)
+            }
+        } finally {
+            runner.postScript(dispatcher, scriptContext, execOps)
         }
     }
 }

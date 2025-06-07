@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "tel.schich.dockcross"
-version = "0.4.0"
+version = "0.4.1"
 
 java.toolchain {
     languageVersion = JavaLanguageVersion.of(8)
