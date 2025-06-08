@@ -7,10 +7,13 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.kotlin.dsl.listProperty
 import org.gradle.kotlin.dsl.mapProperty
@@ -26,6 +29,7 @@ import java.io.File
 import java.nio.file.Files
 import javax.inject.Inject
 
+@CacheableTask
 abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOperations) : DefaultTask() {
     @get:Input
     val mountSource: Property<File> = project.objects.property()
@@ -53,6 +57,7 @@ abstract class DockcrossRunTask @Inject constructor(private val execOps: ExecOpe
     val unsafeWritableMountSource: Property<Boolean> = project.objects.property()
 
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     @get:InputDirectory
     val javaHome: DirectoryProperty = project.objects.directoryProperty()
 
