@@ -52,9 +52,9 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
         if (mode == DockerMode.PODMAN) {
             add("--userns=keep-id")
         }
-        if (request.runAs != null) {
+        request.runAs?.let { runAs ->
             add("-u")
-            add("${request.runAs.first}:${request.runAs.second}")
+            add("${runAs.first}:${runAs.second}")
         }
         for ((name, value) in request.extraEnv) {
             env(name, substituteVariables(value, substitutionInput))
