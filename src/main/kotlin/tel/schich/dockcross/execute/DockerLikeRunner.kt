@@ -21,9 +21,15 @@ fun runLikeDocker(executable: String, mode: DockerMode, cli: CliDispatcher, requ
     val outputDir = request.mountSource.relativize(request.outputDir).joinToString(separator = "/", prefix = "$mountPoint/")
     val workdir = request.mountSource.relativize(request.workDir).joinToString(separator = "/", prefix = "$mountPoint/")
     fun MutableList<String>.bindMount(from: Path, to: String, readOnly: Boolean = false) {
-        val roFlag = if (readOnly) ":ro" else ""
+        val options = buildList {
+            if (readOnly) {
+                add("ro")
+            }
+            // selinux shared labels
+            add("z")
+        }.joinToString(prefix = ":", separator = ",")
         add("-v")
-        add("$from:$to$roFlag")
+        add("$from:$to$options")
     }
     fun MutableList<String>.tmpfs(mountPoint: String) {
         add("--mount")
