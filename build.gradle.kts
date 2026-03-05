@@ -1,11 +1,26 @@
+import pl.allegro.tech.build.axion.release.domain.PredefinedVersionCreator
+
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
-    id("com.gradle.plugin-publish") version "2.1.0"
+    alias(libs.plugins.pluginPublish)
+    alias(libs.plugins.axionRelease)
+    alias(libs.plugins.detekt)
+}
+
+scmVersion {
+    tag {
+        prefix = "v"
+    }
+    nextVersion {
+        suffix = "SNAPSHOT"
+        separator = "-"
+    }
+    versionCreator = PredefinedVersionCreator.SIMPLE.versionCreator
 }
 
 group = "tel.schich.dockcross"
-version = "0.4.2"
+version = scmVersion.version
 
 java.toolchain {
     languageVersion = JavaLanguageVersion.of(8)
@@ -32,4 +47,14 @@ gradlePlugin {
             tags = listOf("dockcross", "cross-compilation")
         }
     }
+}
+
+tasks.check {
+    dependsOn(tasks.detektMain, tasks.detektTest)
+}
+
+detekt {
+    parallel = true
+    buildUponDefaultConfig = true
+    config.setFrom(files(project.rootDir.resolve("detekt.yml")))
 }

@@ -1,0 +1,9 @@
+[versions]
+pluginPublish = "2.1.0"
+axionRelease = "1.21.1"
+detekt = "2.0.0-alpha.2"
+
+[plugins]
+pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
+axionRelease = { id = "pl.allegro.tech.build.axion-release", version.ref = "axionRelease" }
+detekt = { id = "dev.detekt", version.ref = "detekt" }

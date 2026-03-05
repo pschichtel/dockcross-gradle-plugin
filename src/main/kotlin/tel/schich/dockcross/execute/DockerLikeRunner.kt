@@ -110,8 +110,7 @@ object AutoDetectDockerLikeRunner : ContainerRunner {
         }
         return path.asSequence()
             .flatMap { exePath -> executables.map(exePath::resolve) }
-            .filter { Files.exists(it) && Files.isExecutable(it) }
-            .firstOrNull()
+            .firstOrNull { Files.exists(it) && Files.isExecutable(it) }
     }
 
     override fun run(cli: CliDispatcher, request: ExecutionRequest) {
