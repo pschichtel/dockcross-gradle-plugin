@@ -58,3 +58,7 @@ detekt {
     buildUponDefaultConfig = true
     config.setFrom(files(project.rootDir.resolve("detekt.yml")))
 }
+
+tasks.validatePlugins {
+    enableStricterValidation = true
+}
