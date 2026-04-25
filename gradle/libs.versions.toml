@@ -1,7 +1,7 @@
 [versions]
 pluginPublish = "2.1.1"
 axionRelease = "1.21.1"
-detekt = "2.0.0-alpha.2"
+detekt = "2.0.0-alpha.3"
 
 [plugins]
 pluginPublish = { id = "com.gradle.plugin-publish", version.ref = "pluginPublish" }
