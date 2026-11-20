@@ -1,6 +1,6 @@
 [versions]
 pluginPublish = "2.2.1"
-axionRelease = "1.21.4"
+axionRelease = "1.21.5"
 detekt = "2.0.0-alpha.6"
 
 [plugins]
